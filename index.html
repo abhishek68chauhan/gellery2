@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact Sheet — Gallery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=JetBrains+Mono:wght@400;500;700&family=Newsreader:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --neg-black:#141210;
+    --neg-black-2:#1c1917;
+    --sheet-cream:#efe8db;
+    --sheet-cream-dim:#d8cfbd;
+    --safelight:#c23b22;
+    --safelight-glow:#e05a3a;
+    --frame-line:#3a352f;
+    --ink:#2a2620;
+    --paper:#f6f1e6;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+
+  body{
+    background:var(--neg-black);
+    color:var(--sheet-cream);
+    font-family:'Newsreader', serif;
+    min-height:100vh;
+    padding:48px 20px 80px;
+    background-image:
+      radial-gradient(ellipse at top, rgba(194,59,34,0.06), transparent 60%);
+  }
+
+  .wrap{max-width:1180px;margin:0 auto;}
+
+  header{
+    text-align:center;
+    margin-bottom:44px;
+    position:relative;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.28em;
+    text-transform:uppercase;
+    color:var(--safelight-glow);
+    margin-bottom:14px;
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:clamp(36px, 6vw, 64px);
+    letter-spacing:-0.01em;
+    color:var(--sheet-cream);
+  }
+  h1 em{
+    font-style:italic;
+    font-weight:300;
+    color:var(--sheet-cream-dim);
+  }
+  .sub{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    color:#8a8378;
+    margin-top:12px;
+    letter-spacing:0.04em;
+  }
+
+  .filters{
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:10px;
+    margin:36px 0 30px;
+  }
+  .filter-btn{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    background:transparent;
+    color:var(--sheet-cream-dim);
+    border:1px solid var(--frame-line);
+    padding:9px 18px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:all .35s cubic-bezier(.2,.8,.2,1);
+    position:relative;
+  }
+  .filter-btn:hover{
+    border-color:var(--safelight-glow);
+    color:var(--sheet-cream);
+  }
+  .filter-btn.active{
+    background:var(--safelight);
+    border-color:var(--safelight);
+    color:#fff;
+  }
+  .filter-btn.active::before{
+    content:'●';
+    color:#fff;
+    margin-right:6px;
+    font-size:8px;
+    animation:blink 1.6s infinite;
+  }
+  @keyframes blink{50%{opacity:.25;}}
+
+  .filmstrip-edge{
+    height:22px;
+    background-image: radial-gradient(circle, var(--neg-black) 5px, transparent 5.5px);
+    background-color:var(--neg-black-2);
+    background-size:34px 22px;
+    background-position:12px center;
+    border:1px solid var(--frame-line);
+  }
+  .filmstrip-edge.top{border-bottom:none; border-radius:6px 6px 0 0;}
+  .filmstrip-edge.bottom{border-top:none; border-radius:0 0 6px 6px;}
+
+  .sheet{
+    background:var(--neg-black-2);
+    border-left:1px solid var(--frame-line);
+    border-right:1px solid var(--frame-line);
+    padding:22px;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));
+    gap:18px;
+  }
+
+  .frame{
+    position:relative;
+    aspect-ratio:4/5;
+    overflow:hidden;
+    background:#0c0b0a;
+    cursor:pointer;
+    border:1px solid var(--frame-line);
+    opacity:0;
+    transform:translateY(14px);
+    animation:riseIn .6s cubic-bezier(.2,.8,.2,1) forwards;
+  }
+  .frame img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+    filter:grayscale(15%) contrast(1.02);
+    transition:transform .7s cubic-bezier(.2,.8,.2,1), filter .5s ease;
+    transform:scale(1.02);
+  }
+  .frame:hover img{
+    transform:scale(1.12);
+    filter:grayscale(0%) contrast(1.06) saturate(1.08);
+  }
+
+  .frame-overlay{
+    position:absolute; inset:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    padding:14px;
+    background:linear-gradient(180deg, rgba(20,18,16,0) 45%, rgba(20,18,16,0.92) 100%);
+    opacity:0;
+    transition:opacity .4s ease;
+  }
+  .frame:hover .frame-overlay{opacity:1;}
+
+  .frame-number{
+    position:absolute;
+    top:10px; left:10px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    color:var(--safelight-glow);
+    background:rgba(20,18,16,0.75);
+    padding:3px 7px;
+    border-radius:3px;
+    letter-spacing:0.05em;
+    opacity:0;
+    transform:translateY(-4px);
+    transition:all .35s ease;
+  }
+  .frame:hover .frame-number{opacity:1; transform:translateY(0);}
+
+  .frame-title{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:17px;
+    color:#fff;
+    transform:translateY(6px);
+    transition:transform .4s ease .05s;
+  }
+  .frame-cat{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--sheet-cream-dim);
+    margin-top:3px;
+    transform:translateY(6px);
+    transition:transform .4s ease .1s;
+  }
+  .frame:hover .frame-title, .frame:hover .frame-cat{transform:translateY(0);}
+
+  .frame.hide{display:none;}
+
+  @keyframes riseIn{
+    to{opacity:1; transform:translateY(0);}
+  }
+
+  .empty{
+    grid-column:1/-1;
+    text-align:center;
+    padding:60px 20px;
+    color:#8a8378;
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    display:none;
+  }
+  .empty.show{display:block;}
+
+  .lightbox{
+    position:fixed; inset:0;
+    background:rgba(10,9,8,0.96);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:100;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .35s ease;
+  }
+  .lightbox.open{opacity:1; pointer-events:auto;}
+
+  .lb-inner{
+    max-width:min(88vw, 980px);
+    max-height:86vh;
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    transform:scale(.94);
+    transition:transform .4s cubic-bezier(.2,.8,.2,1);
+  }
+  .lightbox.open .lb-inner{transform:scale(1);}
+
+  .lb-frame{
+    position:relative;
+    border:1px solid #3a352f;
+    background:#0c0b0a;
+    max-height:74vh;
+    display:flex;
+  }
+  .lb-frame img{
+    max-width:100%;
+    max-height:74vh;
+    object-fit:contain;
+    display:block;
+    opacity:0;
+    transition:opacity .3s ease;
+  }
+  .lb-frame img.loaded{opacity:1;}
+
+  .lb-caption{
+    margin-top:16px;
+    text-align:center;
+  }
+  .lb-caption .t{
+    font-family:'Fraunces', serif;
+    font-size:20px;
+    color:#fff;
+  }
+  .lb-caption .n{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    color:var(--safelight-glow);
+    letter-spacing:0.1em;
+    margin-top:4px;
+  }
+
+  .lb-close{
+    position:absolute;
+    top:24px; right:28px;
+    background:none;
+    border:none;
+    color:var(--sheet-cream-dim);
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    letter-spacing:0.08em;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    transition:color .3s ease;
+  }
+  .lb-close:hover{color:var(--safelight-glow);}
+  .lb-close svg{width:16px;height:16px;}
+
+  .lb-nav{
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+    background:rgba(20,18,16,0.55);
+    border:1px solid var(--frame-line);
+    color:var(--sheet-cream);
+    width:46px; height:46px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition:all .3s ease;
+  }
+  .lb-nav:hover{background:var(--safelight); border-color:var(--safelight); color:#fff;}
+  .lb-nav.prev{left:-64px;}
+  .lb-nav.next{right:-64px;}
+  .lb-nav svg{width:20px;height:20px;}
+
+  .lb-counter{
+    position:absolute;
+    top:24px; left:28px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    color:var(--sheet-cream-dim);
+    letter-spacing:0.08em;
+  }
+
+  @media (max-width: 720px){
+    body{padding:32px 12px 60px;}
+    .grid{grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px;}
+    .sheet{padding:12px;}
+    .lb-nav.prev{left:6px;}
+    .lb-nav.next{right:6px;}
+    .lb-close{top:14px; right:14px;}
+    .lb-counter{top:14px; left:14px;}
+    .lb-inner{max-width:94vw;}
+    .filters{gap:7px;}
+    .filter-btn{padding:7px 13px; font-size:11px;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001s !important; transition-duration:.001s !important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow"></div>
+    <h1> <em>Image Gallery</em></h1>
+    <div class="sub"></div>
+  </header>
+
+  <div class="filters" id="filters"></div>
+
+  <div class="filmstrip-edge top"></div>
+  <div class="sheet">
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty">No frames on this roll.</div>
+  </div>
+  <div class="filmstrip-edge bottom"></div>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <div class="lb-inner">
+    <div class="lb-frame">
+      <span class="lb-counter" id="lbCounter">01 / 24</span>
+      <button class="lb-close" id="lbClose">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        CLOSE
+      </button>
+      <button class="lb-nav prev" id="lbPrev" aria-label="Previous">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <img id="lbImg" src="" alt="">
+      <button class="lb-nav next" id="lbNext" aria-label="Next">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+    <div class="lb-caption">
+      <div class="t" id="lbTitle"></div>
+      <div class="n" id="lbSub"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const photos = [
+    {id:1015, cat:'nature',   title:'River Bend'},
+    {id:1016, cat:'urban',    title:'Concrete Line'},
+    {id:1018, cat:'nature',   title:'Alpine Ridge'},
+    {id:1019, cat:'travel',   title:'Coastal Road'},
+    {id:1021, cat:'nature',   title:'Foggy Pines'},
+    {id:1024, cat:'travel',   title:'Old Harbor'},
+    {id:1025, cat:'portrait', title:'Studio Light'},
+    {id:1035, cat:'nature',   title:'Valley Floor'},
+    {id:1041, cat:'urban',    title:'Night Grid'},
+    {id:1043, cat:'nature',   title:'Wheat Field'},
+    {id:1044, cat:'travel',   title:'Market Street'},
+    {id:1047, cat:'urban',    title:'Steel Frame'},
+    {id:1050, cat:'portrait', title:'Window Seat'},
+    {id:1053, cat:'nature',   title:'Still Water'},
+    {id:1056, cat:'travel',   title:'Terracotta Roofs'},
+    {id:1059, cat:'nature',   title:'Canyon Wall'},
+    {id:1060, cat:'portrait', title:'Quiet Corner'},
+    {id:1062, cat:'urban',    title:'Overpass'},
+    {id:1067, cat:'nature',   title:'Birch Grove'},
+    {id:1074, cat:'travel',   title:'Ferry Crossing'},
+    {id:1080, cat:'urban',    title:'Rooftop Line'},
+    {id:1084, cat:'portrait', title:'Back Light'},
+    {id:1082, cat:'nature',   title:'Rock Pool'},
+    {id:1069, cat:'travel',   title:'Mountain Pass'},
+  ];
+
+  const catLabels = {all:'All Frames', nature:'Nature', urban:'Urban', portrait:'Portrait', travel:'Travel'};
+  const cats = ['all', ...new Set(photos.map(p=>p.cat))];
+
+  const filtersEl = document.getElementById('filters');
+  const gridEl = document.getElementById('grid');
+  const emptyEl = document.getElementById('empty');
+  let activeCat = 'all';
+  let visibleList = [];
+  let lbIndex = 0;
+
+  function frameNo(i){ return String(i+1).padStart(2,'0'); }
+
+  function renderFilters(){
+    filtersEl.innerHTML = cats.map(c =>
+      `<button class="filter-btn ${c===activeCat?'active':''}" data-cat="${c}">${catLabels[c]}</button>`
+    ).join('');
+    filtersEl.querySelectorAll('.filter-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        activeCat = btn.dataset.cat;
+        renderFilters();
+        renderGrid();
+      });
+    });
+  }
+
+  function renderGrid(){
+    gridEl.innerHTML = '';
+    visibleList = photos.filter(p => activeCat==='all' || p.cat===activeCat);
+    emptyEl.classList.toggle('show', visibleList.length===0);
+
+    visibleList.forEach((p, i)=>{
+      const div = document.createElement('div');
+      div.className = 'frame';
+      div.style.animationDelay = (i*0.04)+'s';
+      div.innerHTML = `
+        <span class="frame-number">#${frameNo(i)}</span>
+        <img src="https://picsum.photos/id/${p.id}/500/620" alt="${p.title}" loading="lazy">
+        <div class="frame-overlay">
+          <div class="frame-title">${p.title}</div>
+          <div class="frame-cat">${catLabels[p.cat]}</div>
+        </div>
+      `;
+      div.addEventListener('click', ()=> openLightbox(i));
+      gridEl.appendChild(div);
+    });
+  }
+
+  const lightbox = document.getElementById('lightbox');
+  const lbImg = document.getElementById('lbImg');
+  const lbTitle = document.getElementById('lbTitle');
+  const lbSub = document.getElementById('lbSub');
+  const lbCounter = document.getElementById('lbCounter');
+
+  function openLightbox(i){
+    lbIndex = i;
+    updateLightbox();
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLightbox(){
+    lightbox.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function updateLightbox(){
+    const p = visibleList[lbIndex];
+    lbImg.classList.remove('loaded');
+    const img = new Image();
+    img.onload = ()=>{ lbImg.src = img.src; lbImg.classList.add('loaded'); };
+    img.src = `https://picsum.photos/id/${p.id}/1200/900`;
+    lbTitle.textContent = p.title;
+    lbSub.textContent = `${catLabels[p.cat].toUpperCase()} · FRAME ${frameNo(lbIndex)}`;
+    lbCounter.textContent = `${frameNo(lbIndex)} / ${String(visibleList.length).padStart(2,'0')}`;
+  }
+  function nextImg(){ lbIndex = (lbIndex+1) % visibleList.length; updateLightbox(); }
+  function prevImg(){ lbIndex = (lbIndex-1+visibleList.length) % visibleList.length; updateLightbox(); }
+
+  document.getElementById('lbClose').addEventListener('click', closeLightbox);
+  document.getElementById('lbNext').addEventListener('click', nextImg);
+  document.getElementById('lbPrev').addEventListener('click', prevImg);
+  lightbox.addEventListener('click', (e)=>{ if(e.target===lightbox) closeLightbox(); });
+
+  document.addEventListener('keydown', (e)=>{
+    if(!lightbox.classList.contains('open')) return;
+    if(e.key==='Escape') closeLightbox();
+    if(e.key==='ArrowRight') nextImg();
+    if(e.key==='ArrowLeft') prevImg();
+  });
+
+  renderFilters();
+  renderGrid();
+</script>
+</body>
+</html>
